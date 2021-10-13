@@ -1,48 +1,55 @@
-// Sample dataset. In a real application, you will probably get this data from another source such as AJAX.
-let dataset = [5, 10, 15, 20, 25]
 
-// Sizing variables for our chart. These are saved as variables as they will be used in calculations.
-let chartWidth = 700
-let chartHeight = 400
-let padding = 5
+// set the dimensions and margins of the graph
+let margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
 
-// We want our our bars to take up the full height of the chart, so, we will apply a scaling factor to the height of every bar.
-let heightScalingFactor = chartHeight / getMax(dataset)
+// set the ranges
+let x = d3.scaleBand()
+    .range([0, width])
+    .padding(0.1);
+let y = d3.scaleLinear()
+    .range([height, 0]);
 
-// Here we are creating the SVG that will be our chart.
-let svg = d3
-    .select('#my-chart')           // I'm starting off by selecting the container.
-    .append('svg')               // Appending an SVG element to that container.
-    .attr('width', chartWidth)   // Setting the width of the SVG.
-    .attr('height', chartHeight) // And setting the height of the SVG.
+// append the svg object to the body of the page
+// append a 'group' element to 'svg'
+// moves the 'group' element to the top left margin
+let svg = d3.select("#my-chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform",
+        "translate(" + margin.left + "," + margin.top + ")");
 
-// The next step is to create the rectangles that will make up the bars in our bar chart.
-svg
-    .selectAll('rect')                                          // I'm selecting all of the rectangles in the SVG (note that at this point, there actually aren't any, but we'll be creating them in a couple of steps).
-    .data(dataset)                                              // Then I'm mapping the dataset to those rectangles.
-    .enter()                                                    // This step is important in that it allows us to dynamically create the rectangle elements that we selected previously.
-    .append('rect')                                           // For each element in the dataset, append a new rectangle.
-    .attr('x', function (value, index) {                    // Set the X position of the rectangle by taking the index of the current item we are creating, multiplying it by the calculated width of each bar, and adding a padding value so we can see some space between bars.
-        return (index * (chartWidth / dataset.length)) + padding
-    })
-    .attr('y', function (value, index) {                    // Set the rectangle by subtracting the scaled height from the height of the chart (this has to be done becuase SVG coordinates start with 0,0 at their top left corner).
-        return chartHeight - (value * heightScalingFactor)
-    })
-    .attr('width', (chartWidth / dataset.length) - padding) // The width is dynamically calculated to have an even distribution of bars that take up the entire width of the chart.
-    .attr('height', function (value, index) {               // The height is simply the value of the item in the dataset multiplied by the height scaling factor.
-        return value * heightScalingFactor
-    })
-    .attr('fill', 'pink')                                   // Sets the color of the bars.
+// get the data
+d3.csv("usa_nominal_gdp_top10_2021.csv").then(function(data) {
 
-/**
- *  Gets the maximum value in a collection of numbers.
- */
-function getMax(collection) {
-    let max = 0
+    // format the data
+    data.forEach(function(d) {
+        d.GDP = +d.GDP;
+    });
 
-    collection.forEach(function (element) {
-        max = element > max ? element : max
-    })
+    // Scale the range of the data in the domains
+    x.domain(data.map(function(d) { return d.State; }));
+    y.domain([0, d3.max(data, function(d) { return d.GDP; })]);
 
-    return max
-}
+    // append the rectangles for the bar chart
+    svg.selectAll(".bar")
+        .data(data)
+        .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d) { return x(d.State); })
+        .attr("width", x.bandwidth())
+        .attr("y", function(d) { return y(d.GDP); })
+        .attr("height", function(d) { return height - y(d.GDP); });
+
+    // add the x Axis
+    svg.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x));
+
+    // add the y Axis
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+});
