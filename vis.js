@@ -1,5 +1,5 @@
 // set the dimensions and margins of the graph
-let margin = {top: 20, right: 20, bottom: 30, left: 40},
+let margin = {top: 50, right: 100, bottom: 50, left: 100},
     width = 960 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom
 
@@ -46,9 +46,21 @@ d3.csv('usa_nominal_gdp_top10_2021.csv').then(function (data) {
     svg.append('g')
         .attr('transform', 'translate(0,' + height + ')')
         .call(d3.axisBottom(x))
+    // Add X axis label:
+    svg.append('text')
+        .attr('text-anchor', 'end')
+        .attr('x', width/2)
+        .attr('y', height + margin.top)
+        .text('States')
 
     // add the y Axis
     svg.append('g')
         .call(d3.axisLeft(y))
-
+    // Y axis label:
+    svg.append('text')
+        .attr('text-anchor', 'end')
+        .attr('transform', 'rotate(-90)')
+        .attr('y', -margin.left + 40)
+        .attr('x', -width / 6)
+        .text('Nominal GDP (millions of $)')
 })
