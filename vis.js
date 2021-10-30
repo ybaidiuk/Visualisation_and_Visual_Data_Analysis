@@ -1,66 +1,118 @@
-// set the dimensions and margins of the graph
-let margin = {top: 50, right: 100, bottom: 50, left: 100},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom
+const width = 960;
+const height = 500;
+const margin = 200;
+const padding = 200;
+const adj = 30;
+// we are appending SVG first
+const svg = d3.select("div#container").append("svg")
+    .attr("preserveAspectRatio", "xMinYMin meet")
+    .attr("viewBox", "-"
+        + adj + " -"
+        + adj + " "
+        + (width + adj *3) + " "
+        + (height + adj*3))
+    .style("padding", `0 ${padding}`)
+    .style("margin", `0 ${margin}`)
+    .classed("svg-content", true);
 
-// set the ranges
-let x = d3.scaleBand()
-    .range([0, width])
-    .padding(0.1)
-let y = d3.scaleLinear()
-    .range([height, 0])
+//-----------------------------DATA-----------------------------//
+const timeConv = d3.timeParse("%d-%b-%Y");
+const dataset = d3.csv("data.csv");
+dataset.then(data =>{
+    let slices = data.columns.slice(1).map(id=> { // slice(1) for removing first item 'dataNames'
+        return {
+            id: id,
+            values: data.map(d=>{
+                return {
+                    date: timeConv(d.date),
+                    measurement: +d[id]
+                };
+            })
+        };
+    });
+    console.log(data)
+    console.log('slices, ',slices)
+    // [
+    //     {
+    //         "id": "A",
+    //         "values": [
+    //             {
+    //                 "date": "2019-07-19T22:00:00.000Z",
+    //                 "measurement": 10
+    //             },
+    //             {
+    //                 "date": "2019-07-20T22:00:00.000Z",
+    //                 "measurement": 11
+    //             }
+    //         ]
+    //     }
+    // ]
 
-// append the svg object to the body of the page
-// append a 'group' element to 'svg'
-// moves the 'group' element to the top left margin
-let svg = d3.select('#my-chart').append('svg')
-    .attr('width', width + margin.left + margin.right)
-    .attr('height', height + margin.top + margin.bottom)
-    .append('g')
-    .attr('transform',
-        'translate(' + margin.left + ',' + margin.top + ')')
-
-// get the data
-d3.csv('usa_nominal_gdp_top10_2021.csv').then(function (data) {
-
-    // format the data
-    data.forEach(d => {
-        d.GDP = +d.GDP
+//----------------------------SCALES----------------------------//
+    const xScale = d3.scaleTime().range([0,width]);
+    const yScale = d3.scaleLinear().rangeRound([height, 0]);
+    xScale.domain(d3.extent(data, d=>{
+        return timeConv(d.date)}));
+    yScale.domain([(0), d3.max(slices, c=> {
+        return d3.max(c.values, d=> {
+            return d.measurement + 4; });
     })
+    ]);
 
-    // Scale the range of the data in the domains
-    x.domain(data.map(d => d.State))
-    y.domain([0, d3.max(data, d => d.GDP)])
+//-----------------------------AXES-----------------------------//
+    const yaxis = d3.axisLeft()
+        .ticks((slices[0].values).length)
+        .scale(yScale);
 
-    // append the rectangles for the bar chart
-    svg.selectAll('.bar')
-        .data(data)
-        .enter().append('rect')
-        .attr('class', 'bar')
-        .attr('x', d => x(d.State))
-        .attr('width', x.bandwidth())
-        .attr('y', d => y(d.GDP))
-        .attr('height', d => height - y(d.GDP))
+    const xaxis = d3.axisBottom()
+        .ticks(d3.timeDay.every(1))
+        .tickFormat(d3.timeFormat('%b %d'))
+        .scale(xScale);
 
-    // add the x Axis
-    svg.append('g')
-        .attr('transform', 'translate(0,' + height + ')')
-        .call(d3.axisBottom(x))
-    // Add X axis label:
-    svg.append('text')
-        .attr('text-anchor', 'end')
-        .attr('x', width/2)
-        .attr('y', height + margin.top)
-        .text('States')
+//----------------------------LINES-----------------------------//
+    const line = d3.line()
+        .x(d=> { return xScale(d.date); })
+        .y(d=> { return yScale(d.measurement); });
 
-    // add the y Axis
-    svg.append('g')
-        .call(d3.axisLeft(y))
-    // Y axis label:
-    svg.append('text')
-        .attr('text-anchor', 'end')
-        .attr('transform', 'rotate(-90)')
-        .attr('y', -margin.left + 40)
-        .attr('x', -width / 6)
-        .text('Nominal GDP (millions of $)')
-})
+    // let id = 0;
+    // const ids =  () => "line-"+id++;
+//-------------------------2. DRAWING---------------------------//
+//-----------------------------AXES-----------------------------//
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xaxis);
+
+    svg.append("g")
+        .attr("class", "axis")
+        .call(yaxis)
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("dy", ".75em")
+        .attr("y", 6)
+        .style("text-anchor", "end")
+        .text("Frequency");
+
+//----------------------------LINES-----------------------------//
+    const lines = svg.selectAll("lines")
+        .data(slices)
+        .enter()
+        .append("g");
+
+    lines.append("path")
+        .attr("class", "line-2")
+        .attr("d", d=> { return line(d.values); });
+
+    lines.append("text")
+        .attr("class","serie_label")
+        .datum(d=> {
+            return {
+                id: d.id,
+                value: d.values[d.values.length - 1]}; })
+        .attr("transform", d=> {
+            return "translate(" + (xScale(d.value.date) + 10)
+                + "," + (yScale(d.value.measurement) + 5 ) + ")"; })
+        .attr("x", 5)
+        .text(d=> { return ("Serie ") + d.id; });
+
+});
