@@ -48,6 +48,7 @@ dataset.then(data => {
         .scale(yScale);
 
     const xaxis = d3.axisBottom()
+        .tickFormat(d3.format('d'))
         .ticks(yearsArr.length)
         .scale(xScale);
 
