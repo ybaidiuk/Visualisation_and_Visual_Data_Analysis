@@ -16,7 +16,6 @@ const svg = d3.select('div#container').append('svg')
     .classed('svg-content', true)
 
 //-----------------------------DATA-----------------------------//
-const timeConv = d3.timeParse('%Y')
 const dataset = d3.csv('usa_nominal_gdp_1997-2020.csv')
 dataset.then(data => {
     console.log(data)
@@ -24,7 +23,7 @@ dataset.then(data => {
 
         return {
             id: obj.State,
-            values: Object.keys(obj).filter(x=>x!=='State').map(key=>{//1997: "104811.9" 1998: "110212.0"
+            values: Object.keys(obj).filter(x=>x!=='State').map(key=>{
                 return {
                     date: key,
                     measurement: +obj[key]
@@ -34,32 +33,13 @@ dataset.then(data => {
     });
 
     console.log('slices, ', slices)
-    // [
-    //     {
-    //         "id": "A",
-    //         "values": [
-    //             {
-    //                 "date": "2019-07-19T22:00:00.000Z",
-    //                 "val": 10
-    //             },
-    //             {
-    //                 "date": "2019-07-20T22:00:00.000Z",
-    //                 "val": 11
-    //             }
-    //         ]
-    //     }
-    // ]
-//NOW
+
 //----------------------------SCALES----------------------------//
     const yearsArr = data.columns.slice(1)
-    const xScale = d3.scaleTime().range([0,width]);
-    const yScale = d3.scaleLinear().rangeRound([height, 0]);
-    xScale.domain(d3.extent(yearsArr, d=>{
-        return d}));
-    yScale.domain([(0), d3.max(slices, c=> {
-        return d3.max(c.values, d=> {
-            return d.measurement + 4; });
-    })
+    const xScale = d3.scaleLinear().range([0,width]);
+    const yScale = d3.scaleLinear().range([height, 0]);
+    xScale.domain(d3.extent(yearsArr, d=>d));
+    yScale.domain([(0), d3.max(slices, c => d3.max(c.values, d => d.measurement + 4))
     ]);
 
 //-----------------------------AXES-----------------------------//
@@ -68,8 +48,7 @@ dataset.then(data => {
         .scale(yScale);
 
     const xaxis = d3.axisBottom()
-        .ticks(d3.timeDay.every(1))
-        .tickFormat(d3.timeFormat('%b %d'))
+        .ticks(yearsArr.length)
         .scale(xScale);
 
 //----------------------------LINES-----------------------------//
@@ -77,8 +56,6 @@ dataset.then(data => {
         .x(d=> { return xScale(d.date); })
         .y(d=> { return yScale(d.measurement); });
 
-    // let id = 0;
-    // const ids =  () => "line-"+id++;
 //-------------------------2. DRAWING---------------------------//
 //-----------------------------AXES-----------------------------//
     svg.append("g")
@@ -104,7 +81,7 @@ dataset.then(data => {
 
     lines.append("path")
         .attr("class", "line-0")
-        .attr("d", d=> { return line(d.values); });
+        .attr("d", d=>  line(d.values));
 
     lines.append("text")
         .attr("class","serie_label")
@@ -112,10 +89,9 @@ dataset.then(data => {
             return {
                 id: d.id,
                 value: d.values[d.values.length - 1]}; })
-        .attr("transform", d=> {
-            return "translate(" + (xScale(d.value.date) + 10)
-                + "," + (yScale(d.value.measurement) + 5 ) + ")"; })
+        .attr("transform", d=> "translate(" + (xScale(d.value.date) + 10)
+                + "," + (yScale(d.value.measurement) + 5 ) + ")")
         .attr("x", 5)
-        .text(d=> { return ("Serie ") + d.id; });
+        .text(d=>  ("Serie ") + d.id);
 
 });
