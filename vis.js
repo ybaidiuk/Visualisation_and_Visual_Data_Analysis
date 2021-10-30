@@ -53,8 +53,8 @@ dataset.then(data => {
 
 //----------------------------LINES-----------------------------//
     const line = d3.line()
-        .x(d=> { return xScale(d.date); })
-        .y(d=> { return yScale(d.measurement); });
+        .x(d => xScale(d.date))
+        .y(d => yScale(d.measurement))
 
 //-------------------------2. DRAWING---------------------------//
 //-----------------------------AXES-----------------------------//
