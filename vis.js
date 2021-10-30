@@ -1,58 +1,61 @@
-const width = 960;
-const height = 500;
-const margin = 200;
-const padding = 200;
-const adj = 30;
+const width = 960
+const height = 500
+const margin = 200
+const padding = 200
+const adj = 30
 // we are appending SVG first
-const svg = d3.select("div#container").append("svg")
-    .attr("preserveAspectRatio", "xMinYMin meet")
-    .attr("viewBox", "-"
-        + adj + " -"
-        + adj + " "
-        + (width + adj *3) + " "
-        + (height + adj*3))
-    .style("padding", `0 ${padding}`)
-    .style("margin", `0 ${margin}`)
-    .classed("svg-content", true);
+const svg = d3.select('div#container').append('svg')
+    .attr('preserveAspectRatio', 'xMinYMin meet')
+    .attr('viewBox', '-'
+        + adj + ' -'
+        + adj + ' '
+        + (width + adj * 3) + ' '
+        + (height + adj * 3))
+    .style('padding', `0 ${padding}`)
+    .style('margin', `0 ${margin}`)
+    .classed('svg-content', true)
 
 //-----------------------------DATA-----------------------------//
-const timeConv = d3.timeParse("%d-%b-%Y");
-const dataset = d3.csv("data.csv");
-dataset.then(data =>{
-    let slices = data.columns.slice(1).map(id=> { // slice(1) for removing first item 'dataNames'
+const timeConv = d3.timeParse('%Y')
+const dataset = d3.csv('usa_nominal_gdp_1997-2020.csv')
+dataset.then(data => {
+    console.log(data)
+    let slices = data.map(obj=> { //remove last one. (columns names)
+
         return {
-            id: id,
-            values: data.map(d=>{
+            id: obj.State,
+            values: Object.keys(obj).filter(x=>x!=='State').map(key=>{//1997: "104811.9" 1998: "110212.0"
                 return {
-                    date: timeConv(d.date),
-                    measurement: +d[id]
+                    date: key,
+                    measurement: +obj[key]
                 };
             })
         };
     });
-    console.log(data)
-    console.log('slices, ',slices)
+
+    console.log('slices, ', slices)
     // [
     //     {
     //         "id": "A",
     //         "values": [
     //             {
     //                 "date": "2019-07-19T22:00:00.000Z",
-    //                 "measurement": 10
+    //                 "val": 10
     //             },
     //             {
     //                 "date": "2019-07-20T22:00:00.000Z",
-    //                 "measurement": 11
+    //                 "val": 11
     //             }
     //         ]
     //     }
     // ]
-
+//NOW
 //----------------------------SCALES----------------------------//
+    const yearsArr = data.columns.slice(1)
     const xScale = d3.scaleTime().range([0,width]);
     const yScale = d3.scaleLinear().rangeRound([height, 0]);
-    xScale.domain(d3.extent(data, d=>{
-        return timeConv(d.date)}));
+    xScale.domain(d3.extent(yearsArr, d=>{
+        return d}));
     yScale.domain([(0), d3.max(slices, c=> {
         return d3.max(c.values, d=> {
             return d.measurement + 4; });
@@ -100,7 +103,7 @@ dataset.then(data =>{
         .append("g");
 
     lines.append("path")
-        .attr("class", "line-2")
+        .attr("class", "line-0")
         .attr("d", d=> { return line(d.values); });
 
     lines.append("text")
