@@ -64,6 +64,11 @@ dataset.then(data => {
         .attr('class', 'axis')
         .attr('transform', 'translate(0,' + height + ')')
         .call(xaxis)
+        .append('text')
+        .attr('dy', '4em')
+        .attr('dx', '40em')
+        .style('text-anchor', 'end')
+        .text('YEARS')
 
     svg.append('g')
         .attr('class', 'axis')
