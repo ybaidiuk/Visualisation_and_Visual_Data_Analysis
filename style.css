@@ -1,6 +1,10 @@
+.center-text {
+    text-align: center;
+}
+
 /* AXES */
 /* ticks */
-.axis line{
+.axis line {
     stroke: #706f6f;
     stroke-width: 0.5;
     shape-rendering: crispEdges;
