@@ -24,26 +24,13 @@
     font-size: 120%;
 }
 
-/* LINE CHART */
-path.line-0 {
+path.line {
     fill: none;
     stroke: #000000;
 }
 
-path.line-1 {
-    fill: none;
-    stroke: #2b2929;
-    stroke-dasharray: 2;
-}
 
-path.line-2 {
-    fill: none;
-    stroke: #9c9c9c;
-    stroke-dasharray: 6;
-}
-
-.serie_label {
-    fill: #2b2929;
+.mouseover {
+    fill: #e57504;
     font-family: Georgia;
-    font-size: 80%;
 }

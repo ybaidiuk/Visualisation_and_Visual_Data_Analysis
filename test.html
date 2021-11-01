@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" type="text/css" href="styles/main.css">
+  <script src="./scripts/d3.min.js"></script>
+  <title>D3 Enter update exit</title>
+  <div class="header">
+    <a href="d3_interaction.html"><button>back</button></a>
+    <a href="index.html"><button>Table of Contents</button></a>
+    <a href="d3_joining.html"><button>next</button></a>
+  </div>
+</head>
+
+<body>
+  <h1>Enter update exit</h1>
+  <h4>d3_enter_update_exit.html &#9679; d3.min.js &#9679; data/fruit.csv</h4>
+
+
+  <h3> About</h3>
+  <p>
+    Deleting and recreating visual elements on any change is expensive. That is one reason why D3 provides the Enter – Update – Exit pattern. As you have already heard  D3 provides the method enter(), and there is also the exit()-function. Both control the interaction between data and HTML elements it is bound to.
+
+    <br/> <br/>
+    Let's recap:
+  </p>
+  <ul>
+    <li>
+      <span class="code">mySelection.data(data).enter()</span> handles <b>data items for which no elements exist</b> yet in the selec- tion. Often we want to append missing elements here.
+    </li><br/>
+    <li>
+      <span class="code">mySelection.data(data).exit()</span> handles <b>elements for which no data item exists</b> in our selection anymore. Often we want to remove the superfluous elements here.
+    </li><br/>
+    <li>
+      <span class="code">mySelection.data(data)</span> only binding data and elements returns the 'update' selection and handles <b>existing elements for which the data changed.</b> Often here most things are done, e.g. setting the element's properties.
+    </li>
+  </ul>
+
+  <img src="./images/enter_update_exit.png" width="400"/><br/>
+  <a href="https://bost.ocks.org/mike/join/">Source</a>
+
+  <h3>Example </h3>
+
+  <p>
+    To see how the enter update exit pattern works, we now want to color all fruits green, which are new, and all updated ones red. All exit-elements should be removed. Then we want to merge the enter and update elements and add them a black border.
+  </p>
+  <p>
+    First we have to select the fruits from before and bind the new data to it. Here it is very important that we set a key as second parameter, which D3 needs to identify and compare the objects.
+  </p>
+  <p class="code">
+    let fruitsUpdate = diagram.selectAll("circle") <br/>
+    .data(newData, d => d.name)
+  </p>
+  <p>
+    Then we have to define the enter, merge and exit selections.
+  </p>
+  <p class="code">
+    let fruitsEnter = fruitsUpdate.enter()<br/>
+    .append("circle")<br/>
+    <br/>
+    let fruitsMerge = fruitsUpdate.merge(fruitsEnter)<br/>
+    <br/>
+    let fruitsExit = fruitsUpdate.exit()
+
+  </p>
+  <p> And then we can add all the changes for the elements:
+  </p>
+  <p class="code">
+    fruitsEnter<br/>
+    .attr("fill","green")<br/>
+    <br/>
+    fruitsMerge<br/>
+    .attr("cy",100)<br/>
+    .attr("cx",(d,i) => scaleX(d.weight))<br/>
+    .attr("r", d => d.size)<br/>
+    .attr("stroke-width","2")<br/>
+    .attr("stroke","black")<br/>
+    .on("mouseover",fruitOver)<br/>
+    .on("mouseout",fruitOut)<br/>
+    <br/>
+    fruitsUpdate<br/>
+    .attr("fill","red")<br/>
+    <br/>
+    fruitsExit.remove();
+  </p>
+
+  <p>
+    So now take a look at what happens, when you change the data:
+  </p>
+  <div id="buttonspace"></div>
+
+
+  <!-- First create the SVG -->
+  <svg width="600" height="200" id="firstvis"></svg>
+  <script>
+
+    let svg = d3.select("#firstvis"); //Select and create a variable for the SVG
+    let diagram = svg.append("g").attr("transform","translate(20,0)").attr("id","diagram")
+
+    //Add a title
+    svg.append("text")
+            .text("Fruits")
+            .attr("y",20)
+            .attr("x",125)
+            .style("font-weight","bold")
+            .attr("id","title")
+
+    d3.csv("./data/fruit.csv") //Load the data
+            .then(data => { //wait for that the data is loaded
+              data.forEach(d => { //convert the strings to numbers
+                d.size = +d["size"];
+                d.weight = +d.weight;
+                d.pricePerKg = +d.pricePerKg;
+              });
+              console.log(data) //output the converted data
+
+              /* SCALES */
+              let maxWeight = d3.max(data, function(d){ //Maximum weight of all fruits
+                return d.weight; //We only evaluate the weight.
+              });
+              let scaleX = d3.scaleLinear()
+                      .domain([0, maxWeight])
+                      .range([0, 550]); // 550 is the value I set for the maximum width
+
+              /* PLOT DATA */
+              diagram.selectAll("fruits") //select all Fruits, you can choose a name for this group
+                      .data(data) //bind the data
+                      .enter() //create those elements, we don't have right now
+                      .append("circle") //append circles
+                      .attr("cy",100) //set y-coordinate
+                      .attr("cx",(d,i) => scaleX(d.weight)) //set x-coordinate depending on the index
+                      .attr("r", d => d.size) //set radius depending on the size
+                      .attr("fill", d => d.color) //set color depening on the color
+                      .on("mouseover",fruitOver)
+                      .on("mouseout",fruitOut)
+
+              /* AXIS */
+              let axisX = d3.axisBottom() //define an axis on the bottom
+
+              axisX.scale(scaleX) //bind the axis to the scale
+
+              diagram.append("g").call(axisX)
+                      .attr("transform","translate(0,150)") //we just move the axis to the bottom of our SVG
+
+              /* INTERACTION */
+
+
+              /* ENTER UPDATE EXIT */
+              function updateGraph(newData){
+                let fruitsUpdate = diagram.selectAll("circle")
+                        .data(newData, d => d.name) //IMPORTANT: The second parameter is the key, which D3 needs to identify and compare the elements.
+
+                let fruitsEnter = fruitsUpdate.enter() // all new elements
+                        .append("circle")
+
+                let fruitsMerge = fruitsUpdate.merge(fruitsEnter) // all new elements and all update elements
+
+                let fruitsExit = fruitsUpdate.exit() // all elements, which are out
+
+                fruitsEnter
+                        .attr("fill","green")
+
+
+
+                fruitsMerge
+                        .attr("cy",100)
+                        .attr("cx",(d,i) => scaleX(d.weight))
+                        .attr("r", d => d.size)
+                        .attr("stroke-width","2")
+                        .attr("stroke","black")
+                        .on("mouseover",     function fruitOver(event, d){
+                          d3.select("#diagram").append("text")
+                                  .text(d.name)
+                                  .attr("x", scaleX(d.weight) - 20)
+                                  .attr("y", 100 - d.size - 10)
+                                  .attr("id", "fruitName")
+                        })
+                        .on("mouseout",   function fruitOut(event, d){
+                          d3.select("#fruitName").remove();
+                        })
+
+                fruitsUpdate
+                        .attr("fill","red")
+
+                fruitsExit.remove();
+              }
+              d3.select("#buttonspace")
+                      .append("button")
+                      .text("Data 1")
+                      .on("click", buttonClicked1)
+
+              d3.select("#buttonspace")
+                      .append("button")
+                      .text("Data 2")
+                      .on("click", buttonClicked2)
+
+              d3.select("#buttonspace")
+                      .append("button")
+                      .text("Data 3")
+                      .on("click", buttonClicked3)
+
+              function buttonClicked1(){
+                let newData = [...data];
+                updateGraph(newData)
+              }
+              function buttonClicked2(){
+                let newData = [...data];
+                newData.pop()
+                newData.push({name: "Coconut",
+                  size: 17,
+                  weight: 300,
+                  color: "rgb(77, 38, 0)",
+                  pricePerKg: 6})
+                newData.push({name: "Pumpkin",
+                  size: 26,
+                  weight: 500,
+                  color: "rgb(232, 91, 35)",
+                  pricePerKg: 2.5})
+                updateGraph(newData)
+              }
+
+              function buttonClicked3(){
+                let newData = [...data];
+                newData = newData.slice(2,6)
+                newData.push({name: "Coconut",
+                  size: 17,
+                  weight: 300,
+                  color: "rgb(77, 38, 0)",
+                  pricePerKg: 6})
+                updateGraph(newData)
+              }
+
+
+            })
+
+
+  </script>
+
+
+  <h3>More about interaction TODO</h3>
+  <ul>
+    <li>
+      <a href="https://www.w3schools.com/js/js_events.asp">JS events on w3schools</a> <br/>
+    </li>
+    <li>
+      <a href="https://www.w3schools.com/jsref/dom_obj_event.asp">List of all DOM events</a> <br/>
+    </li>
+  </ul>
+</body>
+</html>

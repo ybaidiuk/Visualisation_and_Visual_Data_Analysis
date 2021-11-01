@@ -85,22 +85,28 @@ dataset.then(data => {
         .data(slices)
         .enter()
         .append('g')
+        .on('mouseover', e => {
+            d3.select(e.currentTarget).append('text')
+                .attr('class', 'mouseover')
+                .attr('d', d => line(d.values))
+                .datum(d => {
+                    return {
+                        id: d.id,
+                        value: d.values[d.values.length - 1]
+                    }
+                })
+                .attr('transform', d => 'translate(' + (xScale(d.value.date) + 10) + ',' + (yScale(d.value.measurement) + 5) + ')')
+                .attr('x', 5)
+                .attr("id", "lineName")
+                .text(d => d.id)
+        })
+        .on('mouseout',  e => {
+            // d3.select("#lineName").remove();
+        })
 
     lines.append('path')
-        .attr('class', 'line-0')
+        .attr('class', 'line')
         .attr('d', d => line(d.values))
 
-    lines.append('text')
-        .attr('class', 'serie_label')
-        .datum(d => {
-            return {
-                id: d.id,
-                value: d.values[d.values.length - 1]
-            }
-        })
-        .attr('transform', d => 'translate(' + (xScale(d.value.date) + 10)
-            + ',' + (yScale(d.value.measurement) + 5) + ')')
-        .attr('x', 5)
-        .text(d => d.id)
 
 });
