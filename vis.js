@@ -134,10 +134,26 @@ dataset.then(data => {
         .attr('class', 'line')
         .attr('d', d => line(d.values))
 
+    const updateChart = e => {
+        if (e.selection) {
+            const begin = e.selection[0]
+            const end = e.selection[1]
+            xScale.domain([xScale.invert(begin), xScale.invert(end)])
+
+            svg.selectAll('.line')
+                .transition()
+                .duration(1000)
+                .attr('d', d =>
+                    line(d.values)
+                )
+        }
+    }
+    const brushX = d3.brushX().on('end', updateChart)
     const linesBrush = svgBrush.selectAll('lines')
         .data(slices)
         .enter()
         .append('g')
+        .call(brushX)
 
     linesBrush.append('path')
         .attr('class', 'line')
