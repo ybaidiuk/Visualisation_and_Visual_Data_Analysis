@@ -46,6 +46,17 @@ dataset.then(data => {
 
     console.log('slices, ', slices)
 
+    svg.append("clipPath")
+        .attr("id", "clippath")
+        .append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", width)
+        .attr("height", height)
+
+
+
+
 //----------------------------SCALES----------------------------//
     const yearsArr = data.columns.slice(1)
     const xScale = d3.scaleLinear().range([0, width])
@@ -81,10 +92,12 @@ dataset.then(data => {
 
 //-------------------------2. DRAWING---------------------------//
 //-----------------------------AXES-----------------------------//
-    svg.append('g')
+    let xAxisGroup = svg.append('g')
         .attr('class', 'axis')
         .attr('transform', 'translate(0,' + height + ')')
         .call(xaxis)
+
+    xAxisGroup
         .append('text')
         .attr('dy', '4em')
         .attr('dx', '40em')
@@ -132,6 +145,7 @@ dataset.then(data => {
 
     lines.append('path')
         .attr('class', 'line')
+        .attr('clip-path', "url(#clippath)")
         .attr('d', d => line(d.values))
 
     const updateChart = e => {
@@ -147,6 +161,11 @@ dataset.then(data => {
                 .attr('d', d =>
                     line(d.values)
                 )
+
+            xAxisGroup
+                .transition()
+                .duration(1000)
+                .call(xaxis)
         }
     }
     const brushX = d3.brushX().on('end', updateChart)
