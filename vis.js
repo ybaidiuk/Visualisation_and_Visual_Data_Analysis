@@ -136,6 +136,7 @@ dataset.then(data => {
 
     const updateChart = e => {
         if (e.selection) {
+            xScale.domain(d3.extent(yearsArr, d => d))
             const begin = e.selection[0]
             const end = e.selection[1]
             xScale.domain([xScale.invert(begin), xScale.invert(end)])
@@ -160,3 +161,7 @@ dataset.then(data => {
         .attr('d', d => brushLine(d.values))
 
 });
+
+
+// todo color for selected lines
+// margins. 
