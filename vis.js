@@ -10,7 +10,7 @@ const svg = d3.select('div#container').append('svg')
         + adj + ' -'
         + adj + ' '
         + (width + adj * 3) + ' '
-        + (height + adj * 3))
+        + (height + adj * 2))
     .style('padding', `0 ${padding}`)
     .style('margin', `0 ${margin}`)
     .classed('svg-content', true)
@@ -21,7 +21,7 @@ const svgBrush = d3.select('div#container-brush').append('svg')
         + adj + ' -'
         + adj + ' '
         + (width + adj * 3) + ' '
-        + (height/5 + adj * 3))
+        + (height / 10 + adj * 2))
     .style('padding', `0 ${padding}`)
     .style('margin', `0 ${margin}`)
     .classed('svg-content', true)
@@ -46,15 +46,13 @@ dataset.then(data => {
 
     console.log('slices, ', slices)
 
-    svg.append("clipPath")
-        .attr("id", "clippath")
-        .append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", width)
-        .attr("height", height)
-
-
+    svg.append('clipPath')
+        .attr('id', 'clippath')
+        .append('rect')
+        .attr('x', 0)
+        .attr('y', 0)
+        .attr('width', width)
+        .attr('height', height)
 
 
 //----------------------------SCALES----------------------------//
@@ -65,7 +63,7 @@ dataset.then(data => {
     yScale.domain([(0), d3.max(slices, c => d3.max(c.values, d => d.measurement + 4))
     ])
 
-    const brushScaleY = d3.scaleLinear().range([height/5, 0])
+    const brushScaleY = d3.scaleLinear().range([height / 10, 0])
     brushScaleY.domain([(0), d3.max(slices, c => d3.max(c.values, d => d.measurement + 4))
     ])
 
@@ -73,7 +71,7 @@ dataset.then(data => {
 //-----------------------------AXES-----------------------------//
     const yaxis = d3.axisLeft()
         .tickFormat(n => n / 1000000 + ' M')
-        .ticks((slices[0].values).length/5)
+        .ticks((slices[0].values).length / 5)
         .scale(yScale)
 
     const xaxis = d3.axisBottom()
@@ -116,7 +114,7 @@ dataset.then(data => {
 
     svgBrush.append('g')
         .attr('class', 'axis')
-        .attr('transform', 'translate(0,' + height /5 + ')')
+        .attr('transform', 'translate(0,' + height / 10 + ')')
         .call(xaxis)
 
 //----------------------------LINES-----------------------------//
@@ -125,7 +123,10 @@ dataset.then(data => {
         .enter()
         .append('g')
         .on('mouseover', e => {
-            d3.select(e.currentTarget).append('text')
+            d3.select(e.currentTarget).select('path')
+                .attr('class', 'selected-line')
+            d3.select(e.currentTarget)
+                .append('text')
                 .attr('class', 'mouseover')
                 .attr('d', d => line(d.values))
                 .datum(d => {
@@ -136,16 +137,18 @@ dataset.then(data => {
                 })
                 .attr('transform', d => 'translate(' + (xScale(d.value.date) + 10) + ',' + (yScale(d.value.measurement) + 5) + ')')
                 .attr('x', 5)
-                .attr("id", "lineName")
+                .attr('id', 'lineName')
                 .text(d => d.id)
         })
-        .on('mouseout',  e => {
-            d3.select("#lineName").remove();
+        .on('mouseout', e => {
+            d3.select(e.currentTarget).select('path')
+                .attr('class', 'line')
+            d3.select('#lineName').remove()
         })
 
     lines.append('path')
         .attr('class', 'line')
-        .attr('clip-path', "url(#clippath)")
+        .attr('clip-path', 'url(#clippath)')
         .attr('d', d => line(d.values))
 
     const updateChart = e => {
@@ -179,8 +182,4 @@ dataset.then(data => {
         .attr('class', 'line')
         .attr('d', d => brushLine(d.values))
 
-});
-
-
-// todo color for selected lines
-// margins. 
+})

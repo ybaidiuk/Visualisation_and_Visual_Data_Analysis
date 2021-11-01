@@ -28,6 +28,10 @@ path.line {
     fill: none;
     stroke: #000000;
 }
+.selected-line {
+    fill: none;
+    stroke: #e57504;
+}
 
 
 .mouseover {
