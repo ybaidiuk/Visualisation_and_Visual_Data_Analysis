@@ -45,7 +45,7 @@ dataset.then(data => {
 //-----------------------------AXES-----------------------------//
     const yaxis = d3.axisLeft()
         .tickFormat(n => n / 1000000 + ' M')
-        .ticks((slices[0].values).length)
+        .ticks((slices[0].values).length/5)
         .scale(yScale)
 
     const xaxis = d3.axisBottom()
@@ -101,7 +101,7 @@ dataset.then(data => {
                 .text(d => d.id)
         })
         .on('mouseout',  e => {
-            // d3.select("#lineName").remove();
+            d3.select("#lineName").remove();
         })
 
     lines.append('path')
