@@ -15,6 +15,18 @@ const svg = d3.select('div#container').append('svg')
     .style('margin', `0 ${margin}`)
     .classed('svg-content', true)
 
+const svgBrush = d3.select('div#container-brush').append('svg')
+    .attr('preserveAspectRatio', 'xMinYMin meet')
+    .attr('viewBox', '-'
+        + adj + ' -'
+        + adj + ' '
+        + (width + adj * 3) + ' '
+        + (height/5 + adj * 3))
+    .style('padding', `0 ${padding}`)
+    .style('margin', `0 ${margin}`)
+    .classed('svg-content', true)
+
+
 //-----------------------------DATA-----------------------------//
 const dataset = d3.csv('usa_nominal_gdp_1997-2020.csv')
 dataset.then(data => {
@@ -42,6 +54,11 @@ dataset.then(data => {
     yScale.domain([(0), d3.max(slices, c => d3.max(c.values, d => d.measurement + 4))
     ])
 
+    const brushScaleY = d3.scaleLinear().range([height/5, 0])
+    brushScaleY.domain([(0), d3.max(slices, c => d3.max(c.values, d => d.measurement + 4))
+    ])
+
+
 //-----------------------------AXES-----------------------------//
     const yaxis = d3.axisLeft()
         .tickFormat(n => n / 1000000 + ' M')
@@ -57,6 +74,10 @@ dataset.then(data => {
     const line = d3.line()
         .x(d => xScale(d.date))
         .y(d => yScale(d.measurement))
+
+    const brushLine = d3.line()
+        .x(d => xScale(d.date))
+        .y(d => brushScaleY(d.measurement))
 
 //-------------------------2. DRAWING---------------------------//
 //-----------------------------AXES-----------------------------//
@@ -79,6 +100,11 @@ dataset.then(data => {
         .attr('dx', '-10em')
         .style('text-anchor', 'end')
         .text('Nominal GDP(Millions of current dollars)')
+
+    svgBrush.append('g')
+        .attr('class', 'axis')
+        .attr('transform', 'translate(0,' + height /5 + ')')
+        .call(xaxis)
 
 //----------------------------LINES-----------------------------//
     const lines = svg.selectAll('lines')
@@ -108,5 +134,13 @@ dataset.then(data => {
         .attr('class', 'line')
         .attr('d', d => line(d.values))
 
+    const linesBrush = svgBrush.selectAll('lines')
+        .data(slices)
+        .enter()
+        .append('g')
+
+    linesBrush.append('path')
+        .attr('class', 'line')
+        .attr('d', d => brushLine(d.values))
 
 });
